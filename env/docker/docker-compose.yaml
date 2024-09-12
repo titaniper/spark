@@ -2,39 +2,50 @@ version: "3"
 
 services:
   spark-master:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.0
     container_name: spark-master
     environment:
       - SPARK_MODE=master
-      - SPARK_MASTER_PORT=7077
-      - SPARK_MASTER_WEBUI_PORT=8080
+      - SPARK_MASTER_PORT=8341
+      - SPARK_MASTER_WEBUI_PORT=8340
     ports:
-      - "8380:8080"
-      - "7077:7077"
+      - "8340:8340"
+      - "8341:8341"
+    volumes:
+      - shared-workspace:/home/jovyan/shared
 
   spark-worker:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.0
     container_name: spark-worker
     environment:
       - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_WEBUI_PORT=8081
+      - SPARK_MASTER_URL=spark://spark-master:8341
+      - SPARK_WORKER_WEBUI_PORT=8342
     depends_on:
       - spark-master
     ports:
-      - "8081:8081"
+      - "8342:8342"
+    volumes:
+      - shared-workspace:/home/jovyan/shared
 
   jupyter:
-    image: jupyter/pyspark-notebook:latest
+    image: jupyter/pyspark-notebook:spark-3.5.0
     container_name: jupyter
     environment:
-      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_MASTER=spark://spark-master:8341
       - JUPYTER_ENABLE_LAB=yes
+      - SPARK_DRIVER_OPTIONS="-Dspark.ui.port=4040"
     ports:
-      - "8888:8888"
+      - "8343:8888"
+      - "4040:4040"
     volumes:
       - ../../projects:/home/jovyan/work
+      - shared-workspace:/home/jovyan/shared
     depends_on:
       - spark-master
       - spark-worker
     command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
+
+volumes:
+  shared-workspace:
+  spark-events:

@@ -2,39 +2,83 @@ version: "3"
 
 services:
   spark-master:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.0
     container_name: spark-master
     environment:
       - SPARK_MODE=master
       - SPARK_MASTER_PORT=7077
       - SPARK_MASTER_WEBUI_PORT=8080
+      - SPARK_VERSION=3.5.0
+      - SPARK_DAEMON_MEMORY=2g
+      - SPARK_MASTER_OPTS="-Dspark.driver.memory=2g -Dspark.executor.memory=2g -Dspark.executor.cores=4"
     ports:
       - "8380:8080"
       - "7077:7077"
-
+    networks:
+      - kafka-network
+    volumes:
+      - ./spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./log4j.properties:/opt/bitnami/spark/conf/log4j.properties
   spark-worker:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.0
     container_name: spark-worker
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_WORKER_WEBUI_PORT=8081
+      - SPARK_VERSION=3.5.0
+      - SPARK_WORKER_MEMORY=4g
+      - SPARK_WORKER_CORES=4
+      - SPARK_DAEMON_MEMORY=2g
+      - SPARK_WORKER_OPTS="-Dspark.executor.memory=2g -Dspark.executor.cores=2"
+    volumes:
+      - ./spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./log4j.properties:/opt/bitnami/spark/conf/log4j.properties
     depends_on:
       - spark-master
     ports:
       - "8081:8081"
-
+    networks:
+      - kafka-network
   jupyter:
-    image: jupyter/pyspark-notebook:latest
+    # image: jupyter/pyspark-notebook:latest
+    image: jupyter/pyspark-notebook:spark-3.5.0
     container_name: jupyter
     environment:
       - SPARK_MASTER=spark://spark-master:7077
       - JUPYTER_ENABLE_LAB=yes
     ports:
       - "8888:8888"
+      # driver web ui
+      - "4040:4040"
     volumes:
       - ../../projects:/home/jovyan/work
+      - ./spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./log4j.properties:/opt/spark/conf/log4j.properties
     depends_on:
       - spark-master
       - spark-worker
     command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
+    networks:
+      - kafka-network
+  spark-driver:
+    image: bitnami/spark:3.5.0
+    container_name: spark-driver
+    environment:
+      - SPARK_MODE=client
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_VERSION=3.5.0
+    volumes:
+      - ./your_script.py:/opt/bitnami/spark/your_script.py
+    command: /opt/bitnami/spark/bin/spark-submit --master spark://spark-master:7077 /opt/bitnami/spark/your_script.py
+    depends_on:
+      - spark-master
+      - spark-worker
+    networks:
+      - kafka-network
+
+
+networks:
+  kafka-network:
+    name: kafka-network
+    external: true

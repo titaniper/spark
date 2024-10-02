@@ -7,15 +7,12 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-
-
 import org.apache.spark.sql.RowFactory;
 
 import java.util.Arrays;
 
-public class App {
-    public static void main(String[] args) {
-        DataSetTest2 test = new DataSetTest2();
-        test.test();
+public class GCTest {
+    public void spark() {
+        System.out.println("Hello, World!");
     }
 }

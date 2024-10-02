@@ -19,7 +19,10 @@ dependencies {
     // Use JUnit Jupiter for testing.
     testImplementation libs.junit.jupiter
 
+
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.apache.spark:spark-sql_2.12:3.5.1'
     // This dependency is used by the application.
     implementation libs.guava

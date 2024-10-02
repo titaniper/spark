@@ -45,8 +45,9 @@ services:
     image: jupyter/pyspark-notebook:spark-3.5.0
     container_name: jupyter
     environment:
-      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_MASTER=spark://spark-master:8341
       - JUPYTER_ENABLE_LAB=yes
+      - SPARK_DRIVER_OPTIONS="-Dspark.ui.port=4040"
     ports:
       - "8888:8888"
       # driver web ui
